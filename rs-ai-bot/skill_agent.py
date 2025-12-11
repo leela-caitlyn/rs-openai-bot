@@ -8,6 +8,7 @@ def _extract_text_state(game_state: Dict[str, Any], ctx: Dict[str, Any]) -> str:
     player = game_state.get("player") or {}
     skills = game_state.get("skills") or {}
     npcs = game_state.get("npcs") or []
+    objects = game_state.get("objects") or []
     dialog = game_state.get("dialog") or {}
     chat_log = game_state.get("chat_log") or []
     ui_text = game_state.get("ui_text") or []
@@ -41,6 +42,15 @@ def _extract_text_state(game_state: Dict[str, Any], ctx: Dict[str, Any]) -> str:
             f"actions={acts}"
         )
 
+    if objects:
+        lines.append("OBJECTS (up to 20):")
+        for obj in objects[:20]:
+            acts = obj.get("actions") or []
+            lines.append(
+                f"- {obj.get('name')} @ ({obj.get('x')},{obj.get('y')},{obj.get('plane')}) "
+                f"actions={acts}"
+            )
+
     # Dialog
     npc_text = dialog.get("npc_text")
     player_text = dialog.get("player_text")
@@ -73,17 +83,19 @@ def _call_llm_for_skill(client, game_state: Dict[str, Any], ctx: Dict[str, Any])
         "You can ONLY choose ONE of these actions:\n"
         "  - walk_to_tile\n"
         "  - talk_to_npc\n"
+        "  - interact_object\n"
         "  - dialog_continue\n"
         "  - adjust_camera\n"
         "  - wait\n\n"
         "Action JSON schema (strict):\n"
         "{\n"
-        '  \"action\": \"walk_to_tile\" | \"talk_to_npc\" | \"dialog_continue\" | \"adjust_camera\" | \"wait\",\n'
+        '  \"action\": \"walk_to_tile\" | \"talk_to_npc\" | \"interact_object\" | \"dialog_continue\" | \"adjust_camera\" | \"wait\",\n'
         "  \"target\": null | {\n"
         "      \"x\": int,\n"
         "      \"y\": int,\n"
         "      \"plane\": int,\n"
-        "      \"name\": string\n"
+        "      \"name\": string,\n"
+        "      \"option\": string\n"
         "  },\n"
         "  \"meta\": { \"reason\": string }\n"
         "}\n\n"
@@ -95,6 +107,7 @@ def _call_llm_for_skill(client, game_state: Dict[str, Any], ctx: Dict[str, Any])
         " - Do NOT invent map coordinates. For walk_to_tile, either:\n"
         "   * Use the player's current tile (to stay put), or\n"
         "   * Use the tile of a visible NPC you want to approach (like Banker, Grand Exchange Clerk).\n"
+        " - Use interact_object for skilling spots like trees, rocks, or range fires that are visible.\n"
         " - Prefer talk_to_npc when interacting with Grand Exchange, bankers or skilling tutors.\n"
         " - Use dialog_continue if a dialogue is open.\n"
         " - Use wait if there is no obvious safe action.\n"
@@ -112,7 +125,6 @@ def _call_llm_for_skill(client, game_state: Dict[str, Any], ctx: Dict[str, Any])
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        temperature=0.25,
     )
 
     text = resp.choices[0].message.content.strip()

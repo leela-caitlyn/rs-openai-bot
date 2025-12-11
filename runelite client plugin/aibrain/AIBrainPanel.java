@@ -26,7 +26,7 @@ class AIBrainPanel extends PluginPanel
     private final JButton executeButton;
     private final JButton stopButton;
     private final JLabel statusLabel;
-    private final JLabel actionLabel;
+    private final JTextArea actionLabel;
 
     private final CardLayout cardLayout;
     private final JPanel cardPanel;
@@ -190,9 +190,13 @@ class AIBrainPanel extends PluginPanel
 
         // ---- Status / last action ----
         statusLabel = new JLabel("Status: Idle");
-        actionLabel = new JLabel("Last action: (none)");
-        statusLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        actionLabel = new JTextArea("Last action: (none)");
+        actionLabel.setLineWrap(true);
+        actionLabel.setWrapStyleWord(true);
+        actionLabel.setEditable(false);
+        actionLabel.setOpaque(false);
         actionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        statusLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JPanel statusBody = new JPanel();
         statusBody.setLayout(new BoxLayout(statusBody, BoxLayout.Y_AXIS));
