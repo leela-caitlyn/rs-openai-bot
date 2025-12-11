@@ -10,7 +10,7 @@ import java.awt.*;
 class AIBrainPanel extends PluginPanel
 {
     private final Runnable executeCallback;
-    private final Runnable stopCallback;
+    private Runnable stopCallback;
 
     private final JComboBox<AIBrainMode> modeCombo;
     private final JComboBox<String> questCombo;
@@ -52,6 +52,11 @@ class AIBrainPanel extends PluginPanel
             "Below Ice Mountain",
             "Dragon Slayer I"
     };
+
+    AIBrainPanel(Runnable executeCallback)
+    {
+        this(executeCallback, null);
+    }
 
     AIBrainPanel(Runnable executeCallback, Runnable stopCallback)
     {
@@ -198,6 +203,11 @@ class AIBrainPanel extends PluginPanel
         main.add(statusPanel);
 
         updateModeCard();
+    }
+
+    void setStopCallback(Runnable stopCallback)
+    {
+        this.stopCallback = stopCallback;
     }
 
     private JPanel wrapSection(String title, JComponent body)

@@ -104,7 +104,8 @@ public class AIBrainPlugin extends Plugin
         }
         autoTickCounter = 0;
 
-        panel = new AIBrainPanel(this::executeOnceFromUI, this::stopExecutionFromUI);
+        panel = new AIBrainPanel(this::executeOnceFromUI);
+        panel.setStopCallback(this::stopExecutionFromUI);
 
         BufferedImage dummyIcon = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
 
