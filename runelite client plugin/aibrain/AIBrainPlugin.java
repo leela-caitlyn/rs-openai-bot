@@ -12,7 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.api.InventoryID;
+import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.MenuAction;
@@ -23,7 +24,7 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameTick;
-import net.runelite.api.widgets.ComponentID;
+import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.api.widgets.Widget;
 
 import net.runelite.client.callback.ClientThread;
@@ -358,7 +359,7 @@ public class AIBrainPlugin extends Plugin
 
         // ---- Nearby NPCs ----
         JsonArray npcsArr = new JsonArray();
-        for (NPC npc : client.getCachedNPCs())
+        for (NPC npc : client.getNpcs())
         {
             if (npc == null || npc.getName() == null || npc.getName().isEmpty())
             {
@@ -407,7 +408,7 @@ public class AIBrainPlugin extends Plugin
 
         // ---- Inventory ----
         JsonArray invArr = new JsonArray();
-        ItemContainer inv = client.getItemContainer(InventoryID.INVENTORY);
+        ItemContainer inv = client.getItemContainer(InventoryID.INV);
         if (inv != null)
         {
             Item[] items = inv.getItems();
@@ -440,7 +441,7 @@ public class AIBrainPlugin extends Plugin
         // ---- Dialogue (fixed can_continue) ----
         JsonObject dialog = new JsonObject();
 
-        Widget npcText = client.getWidget(ComponentID.DIALOG_NPC_TEXT);
+        Widget npcText = client.getWidget(WidgetInfo.DIALOG_NPC_TEXT);
         String npcStr = null;
         if (npcText != null)
         {
@@ -448,7 +449,7 @@ public class AIBrainPlugin extends Plugin
             dialog.addProperty("npc_text", npcStr);
         }
 
-        Widget playerText = client.getWidget(ComponentID.DIALOG_PLAYER_TEXT);
+        Widget playerText = client.getWidget(WidgetInfo.DIALOG_PLAYER_TEXT);
         String playerStr = null;
         if (playerText != null)
         {
@@ -457,8 +458,8 @@ public class AIBrainPlugin extends Plugin
         }
 
         // Look for the dedicated "continue" widgets – this is the important part.
-        Widget npcContinue = client.getWidget(ComponentID.DIALOG_NPC_CONTINUE);
-        Widget playerContinue = client.getWidget(ComponentID.DIALOG_PLAYER_CONTINUE);
+        Widget npcContinue = client.getWidget(InterfaceID.ChatLeft.CONTINUE);
+        Widget playerContinue = client.getWidget(InterfaceID.ChatRight.CONTINUE);
 
         boolean hasContinueWidget =
                 (npcContinue != null && !npcContinue.isHidden())
@@ -771,7 +772,7 @@ public class AIBrainPlugin extends Plugin
                 return;
             }
 
-            if (client.getPlane() != target.getPlane())
+            if (client.getTopLevelWorldView().getPlane() != target.getPlane())
             {
                 return;
             }
@@ -807,7 +808,7 @@ public class AIBrainPlugin extends Plugin
             }
 
             NPC targetNpc = null;
-            for (NPC npc : client.getCachedNPCs())
+            for (NPC npc : client.getNpcs())
             {
                 if (npc != null && npc.getName() != null && npc.getName().equalsIgnoreCase(npcName))
                 {
@@ -822,7 +823,7 @@ public class AIBrainPlugin extends Plugin
             }
 
             WorldPoint npcWp = targetNpc.getWorldLocation();
-            if (npcWp == null || npcWp.getPlane() != client.getPlane())
+            if (npcWp == null || npcWp.getPlane() != client.getTopLevelWorldView().getPlane())
             {
                 return;
             }
