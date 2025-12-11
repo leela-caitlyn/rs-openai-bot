@@ -10,6 +10,7 @@ import java.awt.*;
 class AIBrainPanel extends PluginPanel
 {
     private final Runnable executeCallback;
+    private final Runnable stopCallback;
 
     private final JComboBox<AIBrainMode> modeCombo;
     private final JComboBox<String> questCombo;
@@ -23,6 +24,7 @@ class AIBrainPanel extends PluginPanel
     private final JTextField manualGoalField;
 
     private final JButton executeButton;
+    private final JButton stopButton;
     private final JLabel statusLabel;
     private final JLabel actionLabel;
 
@@ -51,9 +53,10 @@ class AIBrainPanel extends PluginPanel
             "Dragon Slayer I"
     };
 
-    AIBrainPanel(Runnable executeCallback)
+    AIBrainPanel(Runnable executeCallback, Runnable stopCallback)
     {
         this.executeCallback = executeCallback;
+        this.stopCallback = stopCallback;
 
         setLayout(new BorderLayout());
 
@@ -147,7 +150,10 @@ class AIBrainPanel extends PluginPanel
 
         main.add(Box.createVerticalStrut(8));
 
-        // ---- Execute button ----
+        // ---- Execute controls ----
+        JPanel controlRow = new JPanel();
+        controlRow.setLayout(new BoxLayout(controlRow, BoxLayout.X_AXIS));
+
         executeButton = new JButton("Execute AI step");
         executeButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         executeButton.addActionListener(e ->
@@ -157,7 +163,23 @@ class AIBrainPanel extends PluginPanel
                 executeCallback.run();
             }
         });
-        main.add(executeButton);
+
+        stopButton = new JButton("Stop execution");
+        stopButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        stopButton.addActionListener(e ->
+        {
+            if (stopCallback != null)
+            {
+                stopCallback.run();
+            }
+        });
+
+        controlRow.add(executeButton);
+        controlRow.add(Box.createHorizontalStrut(6));
+        controlRow.add(stopButton);
+
+        controlRow.setAlignmentX(Component.CENTER_ALIGNMENT);
+        main.add(controlRow);
 
         main.add(Box.createVerticalStrut(8));
 
@@ -253,6 +275,7 @@ class AIBrainPanel extends PluginPanel
             statusLabel.setText(status != null ? status : "");
             actionLabel.setText(details != null ? details : "");
             executeButton.setEnabled(!running);
+            stopButton.setEnabled(true);
         });
     }
 }
