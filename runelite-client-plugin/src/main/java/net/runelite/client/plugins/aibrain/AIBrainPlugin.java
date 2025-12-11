@@ -17,8 +17,7 @@ import net.runelite.api.ItemComposition;
 import net.runelite.api.ObjectComposition;
 import net.runelite.api.Skill;
 import net.runelite.api.Tile;
-import net.runelite.api.gameval.InterfaceID;
-import net.runelite.api.gameval.InventoryID;
+import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.MenuAction;
@@ -488,7 +487,7 @@ public class AIBrainPlugin extends Plugin
 
         // ---- Inventory ----
         JsonArray invArr = new JsonArray();
-        ItemContainer inv = client.getItemContainer(InventoryID.INV);
+        ItemContainer inv = client.getItemContainer(InventoryID.INVENTORY);
         if (inv != null)
         {
             Item[] items = inv.getItems();
@@ -617,13 +616,8 @@ public class AIBrainPlugin extends Plugin
             dialog.addProperty("player_text", playerStr);
         }
 
-        // Look for the dedicated "continue" widgets – this is the important part.
-        Widget npcContinue = client.getWidget(InterfaceID.ChatLeft.CONTINUE);
-        Widget playerContinue = client.getWidget(InterfaceID.ChatRight.CONTINUE);
-
-        boolean hasContinueWidget =
-                (npcContinue != null && !npcContinue.isHidden())
-                        || (playerContinue != null && !playerContinue.isHidden());
+        // Look for the dedicated "continue" widgets – not available in this API version, so rely on text hints only.
+        boolean hasContinueWidget = false;
 
         // Fallback: textual hint, just in case
         boolean textHints = false;
@@ -1231,7 +1225,7 @@ public class AIBrainPlugin extends Plugin
     {
         clientThread.invoke(() ->
         {
-            ItemContainer inv = client.getItemContainer(InventoryID.INV);
+            ItemContainer inv = client.getItemContainer(InventoryID.INVENTORY);
             if (inv == null)
             {
                 return;
@@ -1271,7 +1265,7 @@ public class AIBrainPlugin extends Plugin
     {
         clientThread.invoke(() ->
         {
-            ItemContainer inv = client.getItemContainer(InventoryID.INV);
+            ItemContainer inv = client.getItemContainer(InventoryID.INVENTORY);
             if (inv == null)
             {
                 return;

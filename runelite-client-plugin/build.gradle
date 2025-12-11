@@ -1,0 +1,31 @@
+plugins {
+    id 'java'
+}
+
+group = "net.runelite.client.plugins.aibrain"
+version = "0.1.0"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    withSourcesJar()
+}
+
+dependencies {
+    compileOnly "net.runelite:client:1.10.39"
+    compileOnly "net.runelite:runelite-api:1.10.39"
+
+    compileOnly "org.projectlombok:lombok:1.18.34"
+    annotationProcessor "org.projectlombok:lombok:1.18.34"
+
+    testImplementation "org.junit.jupiter:junit-jupiter:5.10.2"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
