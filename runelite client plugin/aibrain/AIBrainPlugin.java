@@ -83,6 +83,10 @@ public class AIBrainPlugin extends Plugin
     private WorldPoint queuedObjectTarget;
     private String queuedObjectName;
     private String queuedObjectOption;
+    private String queuedUseItemName;
+    private String queuedUseItemOnName;
+    private String queuedUseItemOption;
+    private Integer queuedUseItemSlot;
     private boolean queuedCameraAdjust;
     private boolean queuedDialogContinue;
 
@@ -105,6 +109,10 @@ public class AIBrainPlugin extends Plugin
         queuedObjectTarget = null;
         queuedObjectName = null;
         queuedObjectOption = null;
+        queuedUseItemName = null;
+        queuedUseItemOnName = null;
+        queuedUseItemOption = null;
+        queuedUseItemSlot = null;
         queuedCameraAdjust = false;
         queuedDialogContinue = false;
         aiPaused = false;
@@ -138,6 +146,10 @@ public class AIBrainPlugin extends Plugin
         queuedObjectTarget = null;
         queuedObjectName = null;
         queuedObjectOption = null;
+        queuedUseItemName = null;
+        queuedUseItemOnName = null;
+        queuedUseItemOption = null;
+        queuedUseItemSlot = null;
         queuedCameraAdjust = false;
         queuedDialogContinue = false;
         aiPaused = false;
@@ -359,6 +371,23 @@ public class AIBrainPlugin extends Plugin
             queuedObjectName = null;
             queuedObjectTarget = null;
             queuedObjectOption = null;
+        }
+
+        if (queuedUseItemName != null && !queuedUseItemName.isEmpty())
+        {
+            if (queuedUseItemOnName != null && !queuedUseItemOnName.isEmpty())
+            {
+                issueUseItemOnItem(queuedUseItemName, queuedUseItemOnName, queuedUseItemOption, queuedUseItemSlot);
+            }
+            else
+            {
+                issueUseInventoryItem(queuedUseItemName, queuedUseItemOption, queuedUseItemSlot);
+            }
+
+            queuedUseItemName = null;
+            queuedUseItemOnName = null;
+            queuedUseItemOption = null;
+            queuedUseItemSlot = null;
         }
 
         if (queuedCameraAdjust)
@@ -917,6 +946,15 @@ public class AIBrainPlugin extends Plugin
             return;
         }
 
+        if ("use_inventory_item".equalsIgnoreCase(action) && target != null)
+        {
+            queuedUseItemName = target.has("name") ? target.get("name").getAsString() : null;
+            queuedUseItemOption = target.has("option") ? target.get("option").getAsString() : "Use";
+            queuedUseItemOnName = target.has("use_on_name") ? target.get("use_on_name").getAsString() : null;
+            queuedUseItemSlot = target.has("slot") ? target.get("slot").getAsInt() : null;
+            return;
+        }
+
         autoTickCounter = 0;
     }
 
@@ -1151,6 +1189,136 @@ public class AIBrainPlugin extends Plugin
         });
     }
 
+    private int findInventorySlotByName(String itemName, Integer preferredSlot, Item[] items)
+    {
+        if (itemName == null || itemName.isEmpty() || items == null)
+        {
+            return -1;
+        }
+
+        if (preferredSlot != null && preferredSlot >= 0 && preferredSlot < items.length)
+        {
+            Item preferred = items[preferredSlot];
+            if (preferred != null && preferred.getId() > 0)
+            {
+                ItemComposition comp = client.getItemDefinition(preferred.getId());
+                if (comp != null && itemName.equalsIgnoreCase(comp.getName()))
+                {
+                    return preferredSlot;
+                }
+            }
+        }
+
+        for (int i = 0; i < items.length; i++)
+        {
+            Item it = items[i];
+            if (it == null || it.getId() <= 0)
+            {
+                continue;
+            }
+
+            ItemComposition comp = client.getItemDefinition(it.getId());
+            if (comp != null && comp.getName() != null && comp.getName().equalsIgnoreCase(itemName))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private void issueUseInventoryItem(String itemName, String option, Integer preferredSlot)
+    {
+        clientThread.invoke(() ->
+        {
+            ItemContainer inv = client.getItemContainer(InventoryID.INV);
+            if (inv == null)
+            {
+                return;
+            }
+
+            Item[] items = inv.getItems();
+            int slot = findInventorySlotByName(itemName, preferredSlot, items);
+            if (slot < 0)
+            {
+                return;
+            }
+
+            Item item = items[slot];
+            ItemComposition comp = item != null ? client.getItemDefinition(item.getId()) : null;
+            String itemLabel = comp != null ? comp.getName() : itemName;
+            String actionLabel = (option != null && !option.isEmpty()) ? option : "Use";
+
+            MenuAction menuAction = MenuAction.ITEM_USE;
+            if (!"use".equalsIgnoreCase(actionLabel))
+            {
+                menuAction = MenuAction.ITEM_FIRST_OPTION;
+            }
+
+            client.menuAction(
+                    slot,
+                    WidgetInfo.INVENTORY.getId(),
+                    menuAction,
+                    item.getId(),
+                    item.getId(),
+                    actionLabel,
+                    itemLabel
+            );
+        });
+    }
+
+    private void issueUseItemOnItem(String sourceName, String targetName, String option, Integer preferredSlot)
+    {
+        clientThread.invoke(() ->
+        {
+            ItemContainer inv = client.getItemContainer(InventoryID.INV);
+            if (inv == null)
+            {
+                return;
+            }
+
+            Item[] items = inv.getItems();
+            int sourceSlot = findInventorySlotByName(sourceName, preferredSlot, items);
+            int targetSlot = findInventorySlotByName(targetName, null, items);
+
+            if (sourceSlot < 0 || targetSlot < 0)
+            {
+                return;
+            }
+
+            Item source = items[sourceSlot];
+            Item target = items[targetSlot];
+            if (source == null || target == null)
+            {
+                return;
+            }
+
+            ItemComposition srcComp = client.getItemDefinition(source.getId());
+            ItemComposition tgtComp = client.getItemDefinition(target.getId());
+            String actionLabel = (option != null && !option.isEmpty()) ? option : "Use";
+
+            client.menuAction(
+                    sourceSlot,
+                    WidgetInfo.INVENTORY.getId(),
+                    MenuAction.ITEM_USE,
+                    source.getId(),
+                    source.getId(),
+                    actionLabel,
+                    srcComp != null ? srcComp.getName() : sourceName
+            );
+
+            client.menuAction(
+                    targetSlot,
+                    WidgetInfo.INVENTORY.getId(),
+                    MenuAction.ITEM_USE,
+                    target.getId(),
+                    target.getId(),
+                    actionLabel,
+                    tgtComp != null ? tgtComp.getName() : targetName
+            );
+        });
+    }
+
     private void adjustCameraSlightly()
     {
         clientThread.invoke(() ->
@@ -1193,6 +1361,10 @@ public class AIBrainPlugin extends Plugin
         queuedObjectTarget = null;
         queuedObjectName = null;
         queuedObjectOption = null;
+        queuedUseItemName = null;
+        queuedUseItemOnName = null;
+        queuedUseItemOption = null;
+        queuedUseItemSlot = null;
         queuedCameraAdjust = false;
         queuedDialogContinue = false;
     }

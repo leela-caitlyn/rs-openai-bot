@@ -121,6 +121,7 @@ def _extract_text_state(game_state: Dict[str, Any], ctx: Dict[str, Any]) -> str:
     player = game_state.get("player") or {}
     npcs = game_state.get("npcs") or []
     objects = game_state.get("objects") or []
+    inventory = game_state.get("inventory") or []
     dialog = game_state.get("dialog") or {}
     chat_log = game_state.get("chat_log") or []
     ui_text = game_state.get("ui_text") or []
@@ -147,6 +148,13 @@ def _extract_text_state(game_state: Dict[str, Any], ctx: Dict[str, Any]) -> str:
             f"- {npc.get('name')} @ ({npc.get('x')},{npc.get('y')},{npc.get('plane')}) "
             f"actions={acts}"
         )
+
+    if inventory:
+        lines.append("INVENTORY (up to 28):")
+        for item in inventory[:28]:
+            lines.append(
+                f"- slot={item.get('slot')} name={item.get('name')} qty={item.get('quantity')}"
+            )
 
     if objects:
         lines.append("OBJECTS (up to 20):")
@@ -191,18 +199,21 @@ def _call_llm_for_quest(client, game_state: Dict[str, Any], ctx: Dict[str, Any])
         "  - walk_to_tile\n"
         "  - talk_to_npc\n"
         "  - interact_object\n"
+        "  - use_inventory_item\n"
         "  - dialog_continue\n"
         "  - adjust_camera\n"
         "  - wait\n\n"
         "Action JSON schema (strict):\n"
         "{\n"
-        '  "action": "walk_to_tile" | "talk_to_npc" | "interact_object" | "dialog_continue" | "adjust_camera" | "wait",\n'
+        '  "action": "walk_to_tile" | "talk_to_npc" | "interact_object" | "use_inventory_item" | "dialog_continue" | "adjust_camera" | "wait",\n'
         '  "target": null | {\n'
         '      "x": int,\n'
         '      "y": int,\n'
         '      "plane": int,\n'
         '      "name": string,\n'
-        '      "option": string\n'
+        '      "option": string,\n'
+        '      "slot": int,\n'
+        '      "use_on_name": string\n'
         "  },\n"
         '  "meta": { "reason": string }\n'
         "}\n\n"
@@ -211,6 +222,9 @@ def _call_llm_for_quest(client, game_state: Dict[str, Any], ctx: Dict[str, Any])
         " - Use interact_object for visible quest-relevant objects (e.g., trees, stoves, ladders).\n"
         " - Treat on-screen prompts (UI text, flashing arrows, quest hints) as the primary guidance.\n"
         "   If a prompt suggests combining/using items together, choose the interaction that follows it.\n"
+        " - use_inventory_item is for inventory actions:\n"
+        "   * use an item directly (e.g. option='Use' or 'Eat'), optionally pointing to a slot.\n"
+        "   * use an item on another inventory item by providing use_on_name.\n"
         " - Prioritise following explicit quest guidance before generic NPC interactions.\n"
         " - Prefer dialog_continue when 'Click here to continue' is visible.\n"
         " - Prefer talk_to_npc to engage the next relevant quest NPC.\n"
