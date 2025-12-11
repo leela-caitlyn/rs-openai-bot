@@ -785,14 +785,13 @@ public class AIBrainPlugin extends Plugin
             int sceneX = lp.getSceneX();
             int sceneY = lp.getSceneY();
 
-            client.menuAction(
-                    sceneX,
-                    sceneY,
-                    MenuAction.WALK,
-                    0,
-                    -1,
+            client.invokeMenuAction(
                     "Walk here",
-                    ""
+                    "",
+                    0,
+                    MenuAction.WALK.getId(),
+                    sceneX,
+                    sceneY
             );
         });
     }
@@ -836,14 +835,13 @@ public class AIBrainPlugin extends Plugin
             int sceneX = lp.getSceneX();
             int sceneY = lp.getSceneY();
 
-            client.menuAction(
-                    sceneX,
-                    sceneY,
-                    MenuAction.NPC_FIRST_OPTION,
-                    targetNpc.getIndex(),
-                    0,
+            client.invokeMenuAction(
                     "Talk-to",
-                    targetNpc.getName()
+                    targetNpc.getName(),
+                    targetNpc.getIndex(),
+                    MenuAction.NPC_FIRST_OPTION.getId(),
+                    sceneX,
+                    sceneY
             );
         });
     }
@@ -871,14 +869,13 @@ public class AIBrainPlugin extends Plugin
     {
         clientThread.invoke(() ->
         {
-            client.menuAction(
-                    -1,
-                    -1,
-                    MenuAction.WIDGET_CONTINUE,
-                    0,
-                    -1,
+            client.invokeMenuAction(
                     "Continue",
-                    ""
+                    "",
+                    0,
+                    MenuAction.WIDGET_CONTINUE.getId(),
+                    0,
+                    0
             );
         });
     }
