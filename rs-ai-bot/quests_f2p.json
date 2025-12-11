@@ -1,0 +1,194 @@
+{
+  "quests": [
+    {
+      "id": "tutorial_island",
+      "name": "Tutorial Island",
+      "sequence_order": 0,
+      "free_to_play": true,
+      "category": "tutorial",
+      "start_npc": "Gielinor Guide",
+      "start_area": "Tutorial Island",
+      "short_hint": "Follow the on-screen instructions and talk to each instructor in sequence."
+    },
+    {
+      "id": "cooks_assistant",
+      "name": "Cook's Assistant",
+      "sequence_order": 1,
+      "free_to_play": true,
+      "category": "early",
+      "start_npc": "Cook",
+      "start_area": "Lumbridge Castle kitchen",
+      "short_hint": "Talk to the Cook in Lumbridge Castle kitchen and bring him milk, egg, and flour."
+    },
+    {
+      "id": "sheep_shearer",
+      "name": "Sheep Shearer",
+      "sequence_order": 2,
+      "free_to_play": true,
+      "category": "early",
+      "start_npc": "Farmer Fred",
+      "start_area": "Farm north of Lumbridge",
+      "short_hint": "Talk to Farmer Fred, shear sheep, spin the wool in Lumbridge, and return balls of wool."
+    },
+    {
+      "id": "the_restless_ghost",
+      "name": "The Restless Ghost",
+      "sequence_order": 3,
+      "free_to_play": true,
+      "category": "early",
+      "start_npc": "Father Aereck",
+      "start_area": "Lumbridge Church",
+      "short_hint": "Talk to Father Aereck in Lumbridge church, then Father Urhney in the swamp, and help the ghost."
+    },
+    {
+      "id": "rune_mysteries",
+      "name": "Rune Mysteries",
+      "sequence_order": 4,
+      "free_to_play": true,
+      "category": "magic",
+      "start_npc": "Duke Horacio",
+      "start_area": "Lumbridge Castle",
+      "short_hint": "Speak with Duke Horacio in Lumbridge, then deliver the talisman and notes to wizards."
+    },
+    {
+      "id": "demon_slayer",
+      "name": "Demon Slayer",
+      "sequence_order": 5,
+      "free_to_play": true,
+      "category": "combat",
+      "start_npc": "Gypsy Aris",
+      "start_area": "Varrock Square",
+      "short_hint": "Talk to Gypsy Aris, retrieve the keys around Varrock, and defeat the demon with the silverlight sword."
+    },
+    {
+      "id": "shield_of_arrav",
+      "name": "Shield of Arrav",
+      "sequence_order": 6,
+      "free_to_play": true,
+      "category": "story",
+      "start_npc": "Reldo",
+      "start_area": "Varrock Palace library",
+      "short_hint": "Speak to Reldo in Varrock Palace and join either Phoenix Gang or Black Arm Gang to recover the shield halves."
+    },
+    {
+      "id": "vampire_slayer",
+      "name": "Vampire Slayer",
+      "sequence_order": 7,
+      "free_to_play": true,
+      "category": "combat",
+      "start_npc": "Morgan",
+      "start_area": "Draynor Village",
+      "short_hint": "Talk to Morgan, then Dr Harlow in the pub, and prepare to fight the vampire in Draynor Manor."
+    },
+    {
+      "id": "goblin_diplomacy",
+      "name": "Goblin Diplomacy",
+      "sequence_order": 8,
+      "free_to_play": true,
+      "category": "story",
+      "start_npc": "General Bentnoze or General Wartface",
+      "start_area": "Goblin Village north of Falador",
+      "short_hint": "Help the goblin generals decide on armor colour by providing the dyes they want."
+    },
+    {
+      "id": "imp_catcher",
+      "name": "Imp Catcher",
+      "sequence_order": 9,
+      "free_to_play": true,
+      "category": "magic",
+      "start_npc": "Wizard Mizgog",
+      "start_area": "Wizard's Tower south of Draynor",
+      "short_hint": "Talk to Wizard Mizgog and collect the imp beads he needs."
+    },
+    {
+      "id": "dorics_quest",
+      "name": "Doric's Quest",
+      "sequence_order": 10,
+      "free_to_play": true,
+      "category": "mining",
+      "start_npc": "Doric",
+      "start_area": "North of Falador",
+      "short_hint": "Talk to Doric and bring him the ores he requests."
+    },
+    {
+      "id": "the_knights_sword",
+      "name": "The Knight's Sword",
+      "sequence_order": 11,
+      "free_to_play": true,
+      "category": "smithing",
+      "start_npc": "Squire",
+      "start_area": "Falador Castle",
+      "short_hint": "Help the Squire replace a lost sword by speaking with key NPCs and getting special ore for a master smith."
+    },
+    {
+      "id": "pirates_treasure",
+      "name": "Pirate's Treasure",
+      "sequence_order": 12,
+      "free_to_play": true,
+      "category": "exploration",
+      "start_npc": "Redbeard Frank",
+      "start_area": "Port Sarim pub",
+      "short_hint": "Talk to Redbeard Frank, travel and follow the clues to dig up the treasure."
+    },
+    {
+      "id": "prince_ali_rescue",
+      "name": "Prince Ali Rescue",
+      "sequence_order": 13,
+      "free_to_play": true,
+      "category": "story",
+      "start_npc": "Al Kharid prince's advisors",
+      "start_area": "Near Al Kharid palace",
+      "short_hint": "Help free the prince by gathering disguise and escape items, then infiltrating and freeing him."
+    },
+    {
+      "id": "black_knights_fortress",
+      "name": "Black Knights' Fortress",
+      "sequence_order": 14,
+      "free_to_play": true,
+      "category": "combat",
+      "start_npc": "Sir Amik Varze",
+      "start_area": "White Knights' Castle in Falador",
+      "short_hint": "Sneak into the Black Knights' Fortress and sabotage their mysterious weapon."
+    },
+    {
+      "id": "dragon_slayer_i",
+      "name": "Dragon Slayer I",
+      "sequence_order": 20,
+      "free_to_play": true,
+      "category": "grandmaster",
+      "start_npc": "Guildmaster or Oziach",
+      "start_area": "Champions' Guild / Edgeville",
+      "short_hint": "Earn permission from the Champions' Guild, gather ship, crew, and ship items, and defeat the dragon on Crandor."
+    },
+    {
+      "id": "witchs_potion",
+      "name": "Witch's Potion",
+      "sequence_order": 15,
+      "free_to_play": true,
+      "category": "magic",
+      "start_npc": "Hetty",
+      "start_area": "Rimmington",
+      "short_hint": "Talk to Hetty and bring her the ingredients for a magic-boosting potion."
+    },
+    {
+      "id": "the_corsair_curse",
+      "name": "The Corsair Curse",
+      "sequence_order": 16,
+      "free_to_play": true,
+      "category": "story",
+      "start_npc": "Captain Tock",
+      "start_area": "Port Sarim docks",
+      "short_hint": "Help the Corsairs investigate a curse by talking to crew and exploring nearby areas."
+    },
+    {
+      "id": "below_ice_mountain",
+      "name": "Below Ice Mountain",
+      "sequence_order": 17,
+      "free_to_play": true,
+      "category": "exploration",
+      "start_npc": "Willow",
+      "start_area": "West of Ice Mountain",
+      "short_hint": "Join Willow's crew, assemble the team, and explore the ruins beneath Ice Mountain."
+    }
+  ]
+}
