@@ -79,6 +79,8 @@ public class AIBrainPlugin extends Plugin
     private boolean queuedCameraAdjust;
     private boolean queuedDialogContinue;
 
+    private boolean aiPaused;
+
     private final Deque<String> chatLog = new ArrayDeque<>();
 
     private AIBrainPanel panel;
@@ -95,13 +97,14 @@ public class AIBrainPlugin extends Plugin
         queuedTalkNpcName = null;
         queuedCameraAdjust = false;
         queuedDialogContinue = false;
+        aiPaused = false;
         synchronized (chatLog)
         {
             chatLog.clear();
         }
         autoTickCounter = 0;
 
-        panel = new AIBrainPanel(this::executeOnceFromUI);
+        panel = new AIBrainPanel(this::executeOnceFromUI, this::stopExecutionFromUI);
 
         BufferedImage dummyIcon = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
 
@@ -124,6 +127,7 @@ public class AIBrainPlugin extends Plugin
         queuedTalkNpcName = null;
         queuedCameraAdjust = false;
         queuedDialogContinue = false;
+        aiPaused = false;
         synchronized (chatLog)
         {
             chatLog.clear();
@@ -240,11 +244,32 @@ public class AIBrainPlugin extends Plugin
 
     void executeOnceFromUI()
     {
+        aiPaused = false;
         executeStep(false);
+    }
+
+    void stopExecutionFromUI()
+    {
+        aiPaused = true;
+        clearQueuedActions();
+        setPanelStatus("Status: Stopped", "Execution halted by user.", false);
     }
 
     private void executeStep(boolean fromAuto)
     {
+        if (aiPaused)
+        {
+            if (!fromAuto)
+            {
+                aiPaused = false;
+            }
+            else
+            {
+                setPanelStatus("Status: Stopped", "Execution paused. Use Execute AI step to resume.", false);
+                return;
+            }
+        }
+
         if (client.getGameState() != GameState.LOGGED_IN || client.getLocalPlayer() == null)
         {
             setPanelStatus("Status: Not logged in",
@@ -325,6 +350,11 @@ public class AIBrainPlugin extends Plugin
         {
             issueDialogContinue();
             queuedDialogContinue = false;
+        }
+
+        if (aiPaused)
+        {
+            return;
         }
 
         autoTickCounter++;
@@ -622,6 +652,13 @@ public class AIBrainPlugin extends Plugin
                         return;
                     }
 
+                    if (aiPaused)
+                    {
+                        setPanelStatus("Status: Stopped", "Execution halted by user.", false);
+                        clearQueuedActions();
+                        return;
+                    }
+
                     handleActionResponse(actionJson);
 
                     String actionName = actionJson.has("action")
@@ -724,6 +761,12 @@ public class AIBrainPlugin extends Plugin
 
     private void handleActionResponse(JsonObject actionJson)
     {
+        if (aiPaused)
+        {
+            clearQueuedActions();
+            return;
+        }
+
         String action = actionJson.has("action")
                 ? actionJson.get("action").getAsString()
                 : "wait";
@@ -761,6 +804,8 @@ public class AIBrainPlugin extends Plugin
         {
             queuedDialogContinue = true;
         }
+
+        autoTickCounter = 0;
     }
 
     private void issueWalk(WorldPoint target)
@@ -882,6 +927,14 @@ public class AIBrainPlugin extends Plugin
                     ""
             );
         });
+    }
+
+    private void clearQueuedActions()
+    {
+        queuedWalkTarget = null;
+        queuedTalkNpcName = null;
+        queuedCameraAdjust = false;
+        queuedDialogContinue = false;
     }
 
     @Provides
