@@ -13,7 +13,7 @@ import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.GameObject;
 import net.runelite.api.GameState;
-import net.runelite.api.ItemDefinition;
+import net.runelite.api.ItemComposition;
 import net.runelite.api.ObjectComposition;
 import net.runelite.api.Skill;
 import net.runelite.api.Tile;
@@ -477,10 +477,10 @@ public class AIBrainPlugin extends Plugin
                 itm.addProperty("id", it.getId());
                 itm.addProperty("quantity", it.getQuantity());
 
-                ItemDefinition def = client.getItemDefinition(it.getId());
-                if (def != null)
+                ItemComposition comp = client.getItemDefinition(it.getId());
+                if (comp != null)
                 {
-                    itm.addProperty("name", def.getName());
+                    itm.addProperty("name", comp.getName());
                 }
                 invArr.add(itm);
             }
@@ -1140,13 +1140,14 @@ public class AIBrainPlugin extends Plugin
             String optLabel = option != null ? option : "Interact";
             String targetLabel = comp.getName();
 
-            client.invokeMenuAction(
-                    optLabel,
-                    targetLabel,
-                    found.getId(),
-                    menuAction.getId(),
+            client.menuAction(
                     lp.getSceneX(),
-                    lp.getSceneY()
+                    lp.getSceneY(),
+                    menuAction,
+                    found.getId(),
+                    0,
+                    optLabel,
+                    targetLabel
             );
         });
     }
