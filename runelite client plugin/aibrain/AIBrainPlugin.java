@@ -11,7 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
+import net.runelite.api.GameObject;
 import net.runelite.api.GameState;
+import net.runelite.api.ItemDefinition;
+import net.runelite.api.ObjectComposition;
+import net.runelite.api.Skill;
+import net.runelite.api.Tile;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.Item;
@@ -19,7 +24,6 @@ import net.runelite.api.ItemContainer;
 import net.runelite.api.MenuAction;
 import net.runelite.api.NPC;
 import net.runelite.api.NPCComposition;
-import net.runelite.api.Skill;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ChatMessage;
@@ -76,6 +80,9 @@ public class AIBrainPlugin extends Plugin
 
     private WorldPoint queuedWalkTarget;
     private String queuedTalkNpcName;
+    private WorldPoint queuedObjectTarget;
+    private String queuedObjectName;
+    private String queuedObjectOption;
     private boolean queuedCameraAdjust;
     private boolean queuedDialogContinue;
 
@@ -95,6 +102,9 @@ public class AIBrainPlugin extends Plugin
 
         queuedWalkTarget = null;
         queuedTalkNpcName = null;
+        queuedObjectTarget = null;
+        queuedObjectName = null;
+        queuedObjectOption = null;
         queuedCameraAdjust = false;
         queuedDialogContinue = false;
         aiPaused = false;
@@ -126,6 +136,9 @@ public class AIBrainPlugin extends Plugin
 
         queuedWalkTarget = null;
         queuedTalkNpcName = null;
+        queuedObjectTarget = null;
+        queuedObjectName = null;
+        queuedObjectOption = null;
         queuedCameraAdjust = false;
         queuedDialogContinue = false;
         aiPaused = false;
@@ -341,6 +354,14 @@ public class AIBrainPlugin extends Plugin
             queuedTalkNpcName = null;
         }
 
+        if (queuedObjectName != null && queuedObjectTarget != null)
+        {
+            issueInteractWithObject(queuedObjectName, queuedObjectOption, queuedObjectTarget);
+            queuedObjectName = null;
+            queuedObjectTarget = null;
+            queuedObjectOption = null;
+        }
+
         if (queuedCameraAdjust)
         {
             adjustCameraSlightly();
@@ -455,10 +476,90 @@ public class AIBrainPlugin extends Plugin
                 itm.addProperty("slot", slot);
                 itm.addProperty("id", it.getId());
                 itm.addProperty("quantity", it.getQuantity());
+
+                ItemDefinition def = client.getItemDefinition(it.getId());
+                if (def != null)
+                {
+                    itm.addProperty("name", def.getName());
+                }
                 invArr.add(itm);
             }
         }
         root.add("inventory", invArr);
+
+        // ---- Nearby objects ----
+        JsonArray objectsArr = new JsonArray();
+        WorldPoint playerWp = client.getLocalPlayer() != null ? client.getLocalPlayer().getWorldLocation() : null;
+        int plane = client.getTopLevelWorldView().getPlane();
+        Tile[][][] tiles = client.getTopLevelWorldView().getScene().getTiles();
+
+        if (tiles != null && plane >= 0 && plane < tiles.length)
+        {
+            for (Tile[] row : tiles[plane])
+            {
+                if (row == null)
+                {
+                    continue;
+                }
+
+                for (Tile tile : row)
+                {
+                    if (tile == null)
+                    {
+                        continue;
+                    }
+
+                    for (GameObject obj : tile.getGameObjects())
+                    {
+                        if (obj == null)
+                        {
+                            continue;
+                        }
+
+                        WorldPoint wp = obj.getWorldLocation();
+                        if (wp == null || wp.getPlane() != plane)
+                        {
+                            continue;
+                        }
+
+                        if (playerWp != null && playerWp.distanceTo(wp) > 20)
+                        {
+                            continue;
+                        }
+
+                        ObjectComposition comp = client.getObjectDefinition(obj.getId());
+                        if (comp == null || comp.getName() == null || comp.getName().isEmpty())
+                        {
+                            continue;
+                        }
+
+                        JsonObject o = new JsonObject();
+                        o.addProperty("id", obj.getId());
+                        o.addProperty("name", comp.getName());
+                        o.addProperty("x", wp.getX());
+                        o.addProperty("y", wp.getY());
+                        o.addProperty("plane", wp.getPlane());
+
+                        if (comp.getActions() != null)
+                        {
+                            JsonArray acts = new JsonArray();
+                            for (String a : comp.getActions())
+                            {
+                                if (a != null && !a.isEmpty())
+                                {
+                                    acts.add(a);
+                                }
+                            }
+                            o.add("actions", acts);
+                        }
+
+                        objectsArr.add(o);
+                    }
+                }
+            }
+        }
+
+        root.add("objects", objectsArr);
 
         // ---- Skills ----
         JsonObject skills = new JsonObject();
@@ -806,6 +907,17 @@ public class AIBrainPlugin extends Plugin
             queuedDialogContinue = true;
         }
 
+        if ("interact_object".equalsIgnoreCase(action) && target != null)
+        {
+            int tx = target.has("x") ? target.get("x").getAsInt() : 0;
+            int ty = target.has("y") ? target.get("y").getAsInt() : 0;
+            int plane = target.has("plane") ? target.get("plane").getAsInt() : 0;
+            queuedObjectTarget = new WorldPoint(tx, ty, plane);
+            queuedObjectName = target.has("name") ? target.get("name").getAsString() : null;
+            queuedObjectOption = target.has("option") ? target.get("option").getAsString() : null;
+            return;
+        }
+
         autoTickCounter = 0;
     }
 
@@ -895,6 +1007,150 @@ public class AIBrainPlugin extends Plugin
         });
     }
 
+    private void issueInteractWithObject(String objectName, String option, WorldPoint target)
+    {
+        clientThread.invoke(() ->
+        {
+            if (client.getLocalPlayer() == null || target == null)
+            {
+                return;
+            }
+
+            int plane = client.getTopLevelWorldView().getPlane();
+            if (plane != target.getPlane())
+            {
+                return;
+            }
+
+            Tile[][][] tiles = client.getTopLevelWorldView().getScene().getTiles();
+            if (tiles == null || plane < 0 || plane >= tiles.length)
+            {
+                return;
+            }
+
+            GameObject found = null;
+
+            for (Tile[] row : tiles[plane])
+            {
+                if (row == null)
+                {
+                    continue;
+                }
+
+                for (Tile tile : row)
+                {
+                    if (tile == null)
+                    {
+                        continue;
+                    }
+
+                    for (GameObject obj : tile.getGameObjects())
+                    {
+                        if (obj == null)
+                        {
+                            continue;
+                        }
+
+                        WorldPoint wp = obj.getWorldLocation();
+                        if (wp == null || wp.getPlane() != target.getPlane())
+                        {
+                            continue;
+                        }
+
+                        if (wp.getX() != target.getX() || wp.getY() != target.getY())
+                        {
+                            continue;
+                        }
+
+                        ObjectComposition comp = client.getObjectDefinition(obj.getId());
+                        if (comp == null)
+                        {
+                            continue;
+                        }
+
+                        if (objectName != null && !objectName.isEmpty())
+                        {
+                            if (!comp.getName().equalsIgnoreCase(objectName))
+                            {
+                                continue;
+                            }
+                        }
+
+                        found = obj;
+                        break;
+                    }
+
+                    if (found != null)
+                    {
+                        break;
+                    }
+                }
+
+                if (found != null)
+                {
+                    break;
+                }
+            }
+
+            if (found == null)
+            {
+                return;
+            }
+
+            ObjectComposition comp = client.getObjectDefinition(found.getId());
+            LocalPoint lp = LocalPoint.fromWorld(client, target);
+            if (comp == null || lp == null)
+            {
+                return;
+            }
+
+            String[] actions = comp.getActions();
+            MenuAction menuAction = MenuAction.GAME_OBJECT_FIRST_OPTION;
+
+            if (option != null && actions != null)
+            {
+                for (int i = 0; i < actions.length; i++)
+                {
+                    String act = actions[i];
+                    if (act != null && option.equalsIgnoreCase(act))
+                    {
+                        switch (i)
+                        {
+                            case 1:
+                                menuAction = MenuAction.GAME_OBJECT_SECOND_OPTION;
+                                break;
+                            case 2:
+                                menuAction = MenuAction.GAME_OBJECT_THIRD_OPTION;
+                                break;
+                            case 3:
+                                menuAction = MenuAction.GAME_OBJECT_FOURTH_OPTION;
+                                break;
+                            case 4:
+                                menuAction = MenuAction.GAME_OBJECT_FIFTH_OPTION;
+                                break;
+                            default:
+                                menuAction = MenuAction.GAME_OBJECT_FIRST_OPTION;
+                                break;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            String optLabel = option != null ? option : "Interact";
+            String targetLabel = comp.getName();
+
+            client.invokeMenuAction(
+                    optLabel,
+                    targetLabel,
+                    found.getId(),
+                    menuAction.getId(),
+                    lp.getSceneX(),
+                    lp.getSceneY()
+            );
+        });
+    }
+
     private void adjustCameraSlightly()
     {
         clientThread.invoke(() ->
@@ -934,6 +1190,9 @@ public class AIBrainPlugin extends Plugin
     {
         queuedWalkTarget = null;
         queuedTalkNpcName = null;
+        queuedObjectTarget = null;
+        queuedObjectName = null;
+        queuedObjectOption = null;
         queuedCameraAdjust = false;
         queuedDialogContinue = false;
     }
