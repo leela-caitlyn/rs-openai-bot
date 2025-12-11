@@ -3,6 +3,8 @@ package net.runelite.client.plugins.aibrain;
 import net.runelite.client.ui.PluginPanel;
 
 import javax.swing.*;
+import javax.swing.border.BorderFactory;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
 class AIBrainPanel extends PluginPanel
@@ -57,16 +59,22 @@ class AIBrainPanel extends PluginPanel
 
         JPanel main = new JPanel();
         main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-        add(main, BorderLayout.NORTH);
+        main.setBorder(new EmptyBorder(8, 8, 8, 8));
+
+        JScrollPane scrollPane = new JScrollPane(main);
+        scrollPane.setBorder(null);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        add(scrollPane, BorderLayout.CENTER);
 
         // ---- Mode row ----
-        JPanel modeRow = new JPanel(new BorderLayout(4, 0));
+        JPanel modeRow = new JPanel(new BorderLayout(6, 0));
         JLabel modeLabel = new JLabel("Mode:");
         modeCombo = new JComboBox<>(AIBrainMode.values());
         modeCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, modeCombo.getPreferredSize().height));
         modeCombo.addActionListener(e -> updateModeCard());
         modeRow.add(modeLabel, BorderLayout.WEST);
         modeRow.add(modeCombo, BorderLayout.CENTER);
+        modeRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         main.add(modeRow);
 
         main.add(Box.createVerticalStrut(6));
@@ -78,6 +86,8 @@ class AIBrainPanel extends PluginPanel
         // QUEST card
         JPanel questCard = new JPanel();
         questCard.setLayout(new BoxLayout(questCard, BoxLayout.Y_AXIS));
+        questCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         questCard.add(new JLabel("Quest:"));
         questCombo = new JComboBox<>(F2P_QUESTS);
         questCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, questCombo.getPreferredSize().height));
@@ -89,6 +99,8 @@ class AIBrainPanel extends PluginPanel
         // SKILL card
         JPanel skillCard = new JPanel();
         skillCard.setLayout(new BoxLayout(skillCard, BoxLayout.Y_AXIS));
+        skillCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         skillCard.add(new JLabel("Skill:"));
         skillCombo = new JComboBox<>(new String[]{
                 "Attack", "Strength", "Defence", "Hitpoints", "Ranged", "Magic", "Prayer",
@@ -119,6 +131,8 @@ class AIBrainPanel extends PluginPanel
         // MANUAL card
         JPanel manualCard = new JPanel();
         manualCard.setLayout(new BoxLayout(manualCard, BoxLayout.Y_AXIS));
+        manualCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         manualCard.add(new JLabel("Manual instruction:"));
         manualGoalField = new JTextField();
         manualGoalField.setMaximumSize(new Dimension(Integer.MAX_VALUE, manualGoalField.getPreferredSize().height));
@@ -128,7 +142,8 @@ class AIBrainPanel extends PluginPanel
         cardPanel.add(skillCard, AIBrainMode.SKILL.name());
         cardPanel.add(manualCard, AIBrainMode.MANUAL.name());
 
-        main.add(cardPanel);
+        JPanel cardWrapper = wrapSection("Mode details", cardPanel);
+        main.add(cardWrapper);
 
         main.add(Box.createVerticalStrut(8));
 
@@ -151,10 +166,25 @@ class AIBrainPanel extends PluginPanel
         actionLabel = new JLabel("Last action: (none)");
         statusLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         actionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        main.add(statusLabel);
-        main.add(actionLabel);
+
+        JPanel statusBody = new JPanel();
+        statusBody.setLayout(new BoxLayout(statusBody, BoxLayout.Y_AXIS));
+        statusBody.add(statusLabel);
+        statusBody.add(actionLabel);
+
+        JPanel statusPanel = wrapSection("Run status", statusBody);
+        main.add(statusPanel);
 
         updateModeCard();
+    }
+
+    private JPanel wrapSection(String title, JComponent body)
+    {
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBorder(BorderFactory.createTitledBorder(title));
+        wrapper.add(body, BorderLayout.CENTER);
+        wrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return wrapper;
     }
 
     private void updateModeCard()
