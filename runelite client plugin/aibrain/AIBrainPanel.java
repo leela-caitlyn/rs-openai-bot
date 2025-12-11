@@ -7,7 +7,7 @@ import javax.swing.border.BorderFactory;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
-class AIBrainPanel extends PluginPanel
+public class AIBrainPanel extends PluginPanel
 {
     private final Runnable executeCallback;
     private Runnable stopCallback;
@@ -209,7 +209,7 @@ class AIBrainPanel extends PluginPanel
         updateModeCard();
     }
 
-    void setStopCallback(Runnable stopCallback)
+    public void setStopCallback(Runnable stopCallback)
     {
         this.stopCallback = stopCallback;
     }
