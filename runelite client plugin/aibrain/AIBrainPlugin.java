@@ -23,8 +23,8 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
 
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
@@ -358,7 +358,7 @@ public class AIBrainPlugin extends Plugin
 
         // ---- Nearby NPCs ----
         JsonArray npcsArr = new JsonArray();
-        for (NPC npc : client.getNpcs())
+        for (NPC npc : client.getCachedNPCs())
         {
             if (npc == null || npc.getName() == null || npc.getName().isEmpty())
             {
@@ -440,7 +440,7 @@ public class AIBrainPlugin extends Plugin
         // ---- Dialogue (fixed can_continue) ----
         JsonObject dialog = new JsonObject();
 
-        Widget npcText = client.getWidget(WidgetInfo.DIALOG_NPC_TEXT);
+        Widget npcText = client.getWidget(ComponentID.DIALOG_NPC_TEXT);
         String npcStr = null;
         if (npcText != null)
         {
@@ -448,7 +448,7 @@ public class AIBrainPlugin extends Plugin
             dialog.addProperty("npc_text", npcStr);
         }
 
-        Widget playerText = client.getWidget(WidgetInfo.DIALOG_PLAYER_TEXT);
+        Widget playerText = client.getWidget(ComponentID.DIALOG_PLAYER_TEXT);
         String playerStr = null;
         if (playerText != null)
         {
@@ -457,8 +457,8 @@ public class AIBrainPlugin extends Plugin
         }
 
         // Look for the dedicated "continue" widgets – this is the important part.
-        Widget npcContinue = client.getWidget(WidgetInfo.DIALOG_NPC_CONTINUE);
-        Widget playerContinue = client.getWidget(WidgetInfo.DIALOG_PLAYER_CONTINUE);
+        Widget npcContinue = client.getWidget(ComponentID.DIALOG_NPC_CONTINUE);
+        Widget playerContinue = client.getWidget(ComponentID.DIALOG_PLAYER_CONTINUE);
 
         boolean hasContinueWidget =
                 (npcContinue != null && !npcContinue.isHidden())
@@ -785,13 +785,14 @@ public class AIBrainPlugin extends Plugin
             int sceneX = lp.getSceneX();
             int sceneY = lp.getSceneY();
 
-            client.invokeMenuAction(
-                    "Walk here",
-                    "",
-                    0,
-                    MenuAction.WALK.getId(),
+            client.menuAction(
                     sceneX,
-                    sceneY
+                    sceneY,
+                    MenuAction.WALK,
+                    0,
+                    0,
+                    "Walk here",
+                    ""
             );
         });
     }
@@ -806,7 +807,7 @@ public class AIBrainPlugin extends Plugin
             }
 
             NPC targetNpc = null;
-            for (NPC npc : client.getNpcs())
+            for (NPC npc : client.getCachedNPCs())
             {
                 if (npc != null && npc.getName() != null && npc.getName().equalsIgnoreCase(npcName))
                 {
@@ -835,13 +836,14 @@ public class AIBrainPlugin extends Plugin
             int sceneX = lp.getSceneX();
             int sceneY = lp.getSceneY();
 
-            client.invokeMenuAction(
-                    "Talk-to",
-                    targetNpc.getName(),
-                    targetNpc.getIndex(),
-                    MenuAction.NPC_FIRST_OPTION.getId(),
+            client.menuAction(
                     sceneX,
-                    sceneY
+                    sceneY,
+                    MenuAction.NPC_FIRST_OPTION,
+                    targetNpc.getIndex(),
+                    0,
+                    "Talk-to",
+                    targetNpc.getName()
             );
         });
     }
@@ -869,13 +871,14 @@ public class AIBrainPlugin extends Plugin
     {
         clientThread.invoke(() ->
         {
-            client.invokeMenuAction(
+            client.menuAction(
+                    0,
+                    0,
+                    MenuAction.WIDGET_CONTINUE,
+                    0,
+                    0,
                     "Continue",
-                    "",
-                    0,
-                    MenuAction.WIDGET_CONTINUE.getId(),
-                    0,
-                    0
+                    ""
             );
         });
     }
