@@ -3,7 +3,7 @@ package net.runelite.client.plugins.aibrain;
 import net.runelite.client.ui.PluginPanel;
 
 import javax.swing.*;
-import javax.swing.border.BorderFactory;
+import javax.swing.BorderFactory;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
